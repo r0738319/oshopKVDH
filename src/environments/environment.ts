@@ -10,7 +10,9 @@ export const environment = {
     projectId: "oshopkvdhfirebase",
     storageBucket: "oshopkvdhfirebase.appspot.com",
     messagingSenderId: "436879697449",
-    appId: "1:436879697449:web:13fbefdaea49a86fdd1e38"
+    appId: "1:436879697449:web:13fbefdaea49a86fdd1e38",
+    databaseURL:"https://oshopkvdhfirebase-default-rtdb.firebaseio.com/"
+
   }
   
 };
