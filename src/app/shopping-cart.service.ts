@@ -15,18 +15,28 @@ export class ShoppingCartService {
 
   constructor(private db:AngularFireDatabase) { }
 
-  private create(){
-    return this.db.list('/shopping-carts').push({
-      dateCreated: new Date().getTime()
-    });
-  }
-
   async getCart(): Promise<Observable<ShoppingCart>>{
     let cartId= await this.getOrCreateCartId();
     return this.db.object('/shopping-carts/'+ cartId)
     .valueChanges().map((x:any)=>new ShoppingCart(x.items));
   }
-  
+  async addToCart(product: Product) {
+    this.updateItem(product,1)
+   }
+   async removeFromCart(product: Product){
+     this.updateItem(product,-1)
+   }
+
+  async clearCart(){
+     let cartId= await this.getOrCreateCartId();
+     this.db.object('/shopping-carts/'+cartId+'/items').remove();
+   }
+
+  private create(){
+    return this.db.list('/shopping-carts').push({
+      dateCreated: new Date().getTime()
+    });
+  }
   private async getOrCreateCartId(){
     let cartId= localStorage.getItem('cartId');
     if(cartId) return cartId;
@@ -38,23 +48,25 @@ export class ShoppingCartService {
       return result.key;
       return cartId;
   }
-
-
-
-async addToCart(product: Product) {
- this.updateItemQuantity(product,1)
-}
-async removeFromCart(product: Product){
-  this.updateItemQuantity(product,-1)
-}
-private async updateItemQuantity(product:Product, change:number){
+private async updateItem(product:Product, change:number){
   const cartId = await this.getOrCreateCartId();
   const item = this.db.object('/shopping-carts/' + cartId + '/items/' + product.key);
   item.snapshotChanges().pipe(take(1)).subscribe((i: any) => {
+    let quantity= (i.quantity ||0) + change;
+    if(quantity===0) i.remove();
+    else
     if (i.payload.val()) {
-      item.update({ product:product, quantity: i.payload.val().quantity + change });
+      item.update({ 
+        title: product.title,
+        imageUrl: product.imageUrl,
+        price: product.price,
+        quantity: i.payload.val().quantity + change });
     } else {
-      item.set({ product:product, quantity: 1 });        
+      item.set({ 
+        title: product.title,
+        imageUrl: product.imageUrl,
+        price: product.price, 
+        quantity: 1 });        
     }
   }); 
 }
